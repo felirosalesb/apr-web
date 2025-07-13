@@ -13,9 +13,9 @@ function Navbar() {
     };
 
     const navItems = [
-        { name: 'Home' },
-        { name: 'Clientes' },
-        { name: 'Login' },
+        { name: 'Home', path: '/' },
+        { name: 'Clientes', path: '/clientes' },
+        { name: 'Login', path: '/login' },
     ];
 
     const drawer = (

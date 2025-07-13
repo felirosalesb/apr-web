@@ -4,7 +4,7 @@ import { Box, Typography, Container, Card, CardContent } from '@mui/material';
 function Home() {
     return (
         <Box>
-            {/* Sección de la Imagen de Inicio (Hero Section) */}
+            {/* Sección de imagen de fondo */}
             <Box
                 sx={{
                     position: 'relative',
@@ -31,13 +31,11 @@ function Home() {
                     }
                 }}
             >
-                {/* Contenido superpuesto a la imagen (opcional) */}
-                <Typography variant="h2" sx={{ zIndex: 1, mb: 2 }}>
-                    Bienvenido a Mi Plataforma
+                {/* Texto sobre imagen */}
+                <Typography variant="h1" sx={{ zIndex: 1, mb: 2 }}>
+                    APR La Red
                 </Typography>
-                <Typography variant="h5" sx={{ zIndex: 1 }}>
-                    Descubre todas nuestras soluciones
-                </Typography>
+
             </Box>
 
             {/* Sección de Cards de Información */}
@@ -133,7 +131,7 @@ function Home() {
                 mt: 4, // Margen superior para separarlo del contenido
             }}>
                 <Typography variant="body2">
-                    © {new Date().getFullYear()} Mi Aplicación. Todos los derechos reservados.
+                    Comite de agua potable rual La Red
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 1 }}>
                     <a href="/politica-privacidad" style={{ color: 'white', textDecoration: 'none' }}>Política de Privacidad</a> |

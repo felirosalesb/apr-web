@@ -5,6 +5,7 @@ import Home from './components/Home';     // Importa el nuevo Home
 import Login from './Login'; // Asegúrate de que esta ruta sea correcta para tu componente Login
 // Importa tus otros componentes si los necesitas en rutas específicas
 import ClientSearch from './components/clienteSearch'; // Ejemplo
+import ClienteSearch from './components/clienteSearch';
 // import SectorConsumo from './components/sectorConsumo'; // Ejemplo
 
 function AppWrapper() {
@@ -25,8 +26,8 @@ function AppWrapper() {
       <Navbar /> {/* Renderiza el Navbar en todas las páginas */}
       <Routes>
         <Route path="/" element={<Home />} /> {/* Ruta para el Home */}
-        <Route path="/clientes" element={<ClientSearch />} /> {/* Ejemplo de ruta para Clientes */}
-        <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} /> {/* Ruta para Login */}
+        <Route path="/clientes" element={<ClienteSearch />} /> {/* Ejemplo de ruta para Clientes */}
+        <Route path="/login" element={<Login />} /> {/* Ruta para Login */}
         {/* Agrega aquí tus otras rutas si es necesario */}
         {/* <Route path="/sector-consumo" element={<SectorConsumo />} /> */}
       </Routes>

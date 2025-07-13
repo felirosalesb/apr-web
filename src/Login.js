@@ -126,11 +126,6 @@ function Login({ onLoginSuccess }) {
                         {loading ? <CircularProgress size={24} color="inherit" /> : 'Ingresar'}
                     </Button>
 
-                    {/* Eliminamos el botón de Registrarse de este componente,
-                        ya que el registro directo en esta tabla no es seguro sin hashing.
-                        Podrías tener un proceso de registro diferente o manual.
-                    */}
-                    {/* <Button variant="outlined" ... >Registrarse</Button> */}
                 </Box>
             </Paper>
         </Container>
