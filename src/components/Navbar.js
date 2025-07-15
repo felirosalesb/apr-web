@@ -1,28 +1,28 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import HomeIcon from '@mui/icons-material/Home';
+import GroupIcon from '@mui/icons-material/Group';
+import LoginIcon from '@mui/icons-material/Login';
 import { Link, useLocation } from 'react-router-dom';
 
 function Navbar() {
     const [mobileOpen, setMobileOpen] = React.useState(false);
     const location = useLocation();
-    const isHomePage = location.pathname === '/';
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
 
     const navItems = [
-        { name: 'Home', path: '/' },
-        { name: 'Clientes', path: '/clientes' },
-        { name: 'Login', path: '/login' },
+        { name: 'Home', path: '/', icon: <HomeIcon /> },
+        { name: 'Clientes', path: '/clientes', icon: <GroupIcon /> },
+        { name: 'Login', path: '/login', icon: <LoginIcon /> },
     ];
 
     const drawer = (
         <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" sx={{ my: 2 }}>
-                Menú
-            </Typography>
+            <Toolbar />
             <List>
                 {navItems.map((item) => (
                     <ListItem key={item.name} disablePadding>
@@ -36,21 +36,37 @@ function Navbar() {
         </Box>
     );
 
+    // Lógica para determinar el color de la Navbar
+    let backgroundColor;
+    let elevation;
+    if (location.pathname === '/') {
+        // En la página de inicio, es semitransparente
+        backgroundColor = 'rgba(255, 255, 255, 0.15)';
+        elevation = 0;
+    } else if (location.pathname === '/clientes') {
+        // En la página de clientes, es un color oscuro
+        backgroundColor = 'primary.dark';
+        elevation = 4;
+    } else {
+        // Para todas las demás páginas (login, etc.), es el color principal
+        backgroundColor = 'primary.main';
+        elevation = 4;
+    }
+
     return (
         <AppBar
-            position="fixed" // La barra de navegación siempre estará fija en la parte superior
-            elevation={isHomePage ? 0 : 4} // Sin sombra en Home, con sombra en otras páginas
+            position="fixed"
+            elevation={elevation}
             sx={{
-                backgroundColor: isHomePage ? 'rgba(0, 0, 0, 0.4)' : 'primary.main', // Fondo semi-transparente en Home, color primario en otras
-                color: 'white', // El color del texto/iconos siempre será blanco para que se vea sobre el fondo oscuro/transparente
-                transition: 'background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out', // Transición suave para el cambio de color y sombra
-                zIndex: (theme) => theme.zIndex.drawer + 1, // Asegura que la Navbar esté por encima de otros elementos (como el Drawer)
+                backgroundColor: backgroundColor,
+                color: 'white',
+                transition: 'background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                zIndex: (theme) => theme.zIndex.drawer + 1,
             }}
         >
             <Toolbar>
-                {/* Botón de menú hamburguesa para pantallas pequeñas */}
                 <IconButton
-                    color="inherit" // Hereda el color 'white' del AppBar
+                    color="inherit"
                     aria-label="open drawer"
                     edge="start"
                     onClick={handleDrawerToggle}
@@ -58,17 +74,19 @@ function Navbar() {
                 >
                     <MenuIcon />
                 </IconButton>
+                <Typography
+                    variant="h6"
+                    component="div"
+                    sx={{ flexGrow: 1 }}
+                >
+                    Mi Aplicación
+                </Typography>
 
-
-
-
-                {/* Botones de navegación para escritorio */}
                 <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
                     {navItems.map((item) => (
                         <Button
-
                             key={item.name}
-                            color="inherit" // Hereda el color 'white' del AppBar
+                            color="inherit"
                             component={Link}
                             to={item.path}
                             startIcon={item.icon}
@@ -77,7 +95,7 @@ function Navbar() {
                                 textTransform: 'none',
                                 fontWeight: 'bold',
                                 '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.15)', // Un poco más claro al pasar el mouse
+                                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
                                 },
                             }}
                         >
@@ -87,7 +105,6 @@ function Navbar() {
                 </Box>
             </Toolbar>
 
-            {/* Drawer (menú lateral) para móviles */}
             <nav>
                 <Drawer
                     variant="temporary"
@@ -98,7 +115,7 @@ function Navbar() {
                     }}
                     sx={{
                         display: { xs: 'block', sm: 'none' },
-                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240, backgroundColor: 'primary.main', color: 'white' }, // Fondo del Drawer y texto
+                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240, backgroundColor: 'primary.main', color: 'white' },
                     }}
                 >
                     {drawer}
