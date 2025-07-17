@@ -17,8 +17,10 @@ import {
     MenuItem,
     Table, TableHead, TableBody, TableRow, TableCell, TableContainer,
     Modal, Fade, Backdrop,
-    Divider
-    , List, ListItem, ListItemText, IconButton
+    Divider,
+    List, ListItem, ListItemText,
+    IconButton,
+    Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { supabase } from '../supabaseClient';
@@ -34,6 +36,7 @@ import {
     Title,
     Tooltip,
     Legend,
+
 } from 'chart.js';
 
 import * as XLSX from 'xlsx';
@@ -75,9 +78,10 @@ function Reports() {
     const [initialLoading, setInitialLoading] = useState(true);
     const [initialError, setInitialError] = useState(null);
 
-    // NUEVOS Estados para el modal de exportación Excel
+    // Estados para el modal de exportación Excel
     const [openExcelModal, setOpenExcelModal] = useState(false);
-    const [excelExportFilter, setExcelExportFilter] = useState(''); // 'all', 'sector', 'date'
+    const [excelExportFilter, setExcelExportFilter] = useState(''); // 'all', 'sector', 'date', 'single'
+    const [excelSelectedClientId, setExcelSelectedClientId] = useState('');
     const [excelSelectedSector, setExcelSelectedSector] = useState('');
     const [excelStartDate, setExcelStartDate] = useState('');
     const [excelEndDate, setExcelEndDate] = useState('');
@@ -393,6 +397,7 @@ function Reports() {
     const handleOpenExcelModal = () => {
         setOpenExcelModal(true);
         setExcelExportFilter('');
+        setExcelSelectedClientId('');
         setExcelSelectedSector('');
         setExcelStartDate('');
         setExcelEndDate('');
@@ -407,23 +412,35 @@ function Reports() {
         setExcelLoading(true);
         setExcelError(null);
 
+        // La consulta base ahora selecciona explícitamente los campos de datos_medidor
+        // para asegurar que siempre estén presentes, incluso si son null.
         let dataToFetch = supabase.from('lecturas').select(`
             id_lectura,
             mes,
             anio,
             lectura,
-            datos_medidor (id_medidor, nombre_cliente, direccion, sector)
+            datos_medidor:id_medidor (id_medidor, nombre_cliente, direccion, sector)
         `);
 
         try {
             if (excelExportFilter === 'all') {
                 // No se añade filtro adicional a la consulta base
+            } else if (excelExportFilter === 'single') {
+                if (!excelSelectedClientId) {
+                    setExcelError('Por favor, introduce el ID del cliente.');
+                    setExcelLoading(false);
+                    return;
+                }
+                // Filtrar por el id_medidor del cliente
+                dataToFetch = dataToFetch.eq('id_medidor', excelSelectedClientId);
+
             } else if (excelExportFilter === 'sector') {
                 if (!excelSelectedSector) {
                     setExcelError('Por favor, selecciona un sector.');
                     setExcelLoading(false);
                     return;
                 }
+                // Filtrar por el sector del cliente
                 dataToFetch = dataToFetch.eq('datos_medidor.sector', excelSelectedSector);
 
             } else if (excelExportFilter === 'date') {
@@ -459,9 +476,9 @@ function Reports() {
 
             // Ordenar los datos en el lado del cliente
             dataToExport.sort((a, b) => {
-                // Manejar casos donde datos_medidor es null
-                const idA = a.datos_medidor?.id_medidor ?? Infinity; // Pone nulls al final
-                const idB = b.datos_medidor?.id_medidor ?? Infinity; // Pone nulls al final
+                // Manejar casos donde datos_medidor es null o id_medidor es null
+                const idA = a.datos_medidor?.id_medidor ?? Infinity; // Pone nulls/undefineds al final
+                const idB = b.datos_medidor?.id_medidor ?? Infinity; // Pone nulls/undefineds al final
 
                 if (idA !== idB) {
                     return idA - idB;
@@ -476,7 +493,7 @@ function Reports() {
 
             // Formatear los datos en el orden especificado para Excel
             const formattedData = dataToExport.map(item => ({
-                'Id_medidor': item.datos_medidor?.id_medidor || '', // Usar cadena vacía si es null
+                'Id_medidor': item.datos_medidor?.id_medidor || '', // Usar cadena vacía si es null/undefined
                 'Nombre Cliente': item.datos_medidor?.nombre_cliente || '',
                 'Sector': item.datos_medidor?.sector || '',
                 'Dirección': item.datos_medidor?.direccion || '',
@@ -847,6 +864,7 @@ function Reports() {
                                         label="Exportar por:"
                                         onChange={(e) => {
                                             setExcelExportFilter(e.target.value);
+                                            setExcelSelectedClientId('');
                                             setExcelSelectedSector('');
                                             setExcelStartDate('');
                                             setExcelEndDate('');
@@ -855,10 +873,23 @@ function Reports() {
                                     >
                                         <MenuItem value=""><em>Seleccionar</em></MenuItem>
                                         <MenuItem value="all">Todos los Clientes</MenuItem>
+                                        <MenuItem value="single">Un Solo Cliente</MenuItem>
                                         <MenuItem value="sector">Por Sector</MenuItem>
                                         <MenuItem value="date">Por Rango de Fechas</MenuItem>
                                     </Select>
                                 </FormControl>
+
+                                {excelExportFilter === 'single' && (
+                                    <TextField
+                                        label="ID de Cliente a Exportar"
+                                        type="number"
+                                        fullWidth
+                                        value={excelSelectedClientId}
+                                        onChange={(e) => setExcelSelectedClientId(e.target.value)}
+                                        placeholder="Ej: 123"
+                                        sx={{ mb: 3 }}
+                                    />
+                                )}
 
                                 {excelExportFilter === 'sector' && (
                                     <FormControl fullWidth sx={{ mb: 3 }}>
@@ -911,7 +942,13 @@ function Reports() {
                                     color="primary"
                                     fullWidth
                                     onClick={handleExportExcel}
-                                    disabled={excelLoading || !excelExportFilter || (excelExportFilter === 'sector' && !excelSelectedSector) || (excelExportFilter === 'date' && (!excelStartDate || !excelEndDate))}
+                                    disabled={
+                                        excelLoading ||
+                                        !excelExportFilter ||
+                                        (excelExportFilter === 'single' && !excelSelectedClientId) ||
+                                        (excelExportFilter === 'sector' && !excelSelectedSector) ||
+                                        (excelExportFilter === 'date' && (!excelStartDate || !excelEndDate))
+                                    }
                                     sx={{ mt: 3, py: 1.5 }}
                                 >
                                     Generar Excel
