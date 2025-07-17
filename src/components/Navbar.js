@@ -20,7 +20,10 @@ function Navbar({ user, onLogout }) { // Recibe 'user' y 'onLogout' desde App.js
         setMobileOpen(!mobileOpen);
     };
 
-    // Ítems de navegación públicos (siempre visibles)
+    // Determina si el usuario tiene un rol administrativo
+    const isAdmin = user && (user.role === 'office_staff' || user.role === 'admin');
+
+    // Ítems de navegación públicos (siempre visibles si no es admin logueado)
     const publicNavItems = [
         { name: 'Home', path: '/', icon: <HomeIcon /> },
         { name: 'Clientes', path: '/clientes', icon: <GroupIcon /> },
@@ -28,7 +31,7 @@ function Navbar({ user, onLogout }) { // Recibe 'user' y 'onLogout' desde App.js
 
     // Ítems de navegación administrativos (visibles solo para roles específicos)
     const adminNavItems = [
-        { name: 'Dashboard', path: '/admin/dashboard', icon: <DashboardIcon /> },
+        { name: 'Home', path: '/admin/dashboard', icon: <DashboardIcon /> },
         { name: 'Gestión Clientes', path: '/admin/clientes', icon: <PeopleIcon /> },
         { name: 'Informes', path: '/admin/informes', icon: <AssessmentIcon /> },
     ];
@@ -43,12 +46,9 @@ function Navbar({ user, onLogout }) { // Recibe 'user' y 'onLogout' desde App.js
         backgroundColor = 'primary.dark'; // Color oscuro en rutas admin
         elevation = 4;
     } else {
-        backgroundColor = 'primary.main'; // Color principal en otras rutas
+        backgroundColor = 'primary.main'; // Color principal en otras rutas (ej. /clientes público, /login)
         elevation = 4;
     }
-
-    // Determina si el usuario tiene un rol administrativo
-    const isAdmin = user && (user.role === 'office_staff' || user.role === 'admin');
 
     return (
         <AppBar
@@ -80,8 +80,8 @@ function Navbar({ user, onLogout }) { // Recibe 'user' y 'onLogout' desde App.js
                 </Typography>
 
                 <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                    {/* Ítems de navegación públicos */}
-                    {publicNavItems.map((item) => (
+                    {/* Mostrar ítems de navegación públicos SOLO si NO es un admin logueado */}
+                    {!isAdmin && publicNavItems.map((item) => (
                         <Button
                             key={item.name}
                             color="inherit"
@@ -94,7 +94,7 @@ function Navbar({ user, onLogout }) { // Recibe 'user' y 'onLogout' desde App.js
                         </Button>
                     ))}
 
-                    {/* Ítems de navegación administrativos (condicional) */}
+                    {/* Mostrar ítems de navegación administrativos SOLO si ES un admin logueado */}
                     {isAdmin && (
                         <>
                             {adminNavItems.map((item) => (
@@ -109,7 +109,7 @@ function Navbar({ user, onLogout }) { // Recibe 'user' y 'onLogout' desde App.js
                                     {item.name}
                                 </Button>
                             ))}
-                            {/* Botón de Cerrar Sesión (condicional) */}
+                            {/* Botón de Cerrar Sesión (visible solo si hay usuario logueado) */}
                             <Button
                                 color="inherit"
                                 startIcon={<LogoutIcon />}
@@ -121,7 +121,7 @@ function Navbar({ user, onLogout }) { // Recibe 'user' y 'onLogout' desde App.js
                         </>
                     )}
 
-                    {/* Botón de Login (condicional) */}
+                    {/* Mostrar botón de Login SOLO si NO hay usuario logueado */}
                     {!user && (
                         <Button
                             color="inherit"
@@ -147,12 +147,13 @@ function Navbar({ user, onLogout }) { // Recibe 'user' y 'onLogout' desde App.js
                         '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240, backgroundColor: 'primary.main', color: 'white' },
                     }}
                 >
+                    {/* Contenido del Drawer */}
                     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
                         <Toolbar />
                         <Typography variant="h6" sx={{ my: 2 }}>Menú</Typography>
                         <List>
-                            {/* Ítems públicos en el Drawer */}
-                            {publicNavItems.map((item) => (
+                            {/* Ítems públicos en el Drawer (condicional) */}
+                            {!isAdmin && publicNavItems.map((item) => (
                                 <ListItem key={item.name} disablePadding>
                                     <ListItemButton component={Link} to={item.path} sx={{ textAlign: 'center' }}>
                                         {item.icon}<ListItemText primary={item.name} sx={{ ml: 1 }} />

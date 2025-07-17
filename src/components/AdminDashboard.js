@@ -20,39 +20,81 @@ function AdminDashboard() {
     const [stats, setStats] = useState({ totalClients: 0, pendingPayments: 0, recentLecturas: 0 });
     const [loadingStats, setLoadingStats] = useState(true);
     const [errorStats, setErrorStats] = useState(null);
-    const [user, setUser] = useState(null); // Para mostrar el email del usuario logueado
+    const [user, setUser] = useState(null);
     const navigate = useNavigate();
+
+    const getReadingDateWarning = () => {
+        const today = new Date();
+        const currentDay = today.getDate();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+
+        let targetDate = new Date(currentYear, currentMonth, 20);
+
+        if (currentDay > 20) {
+            targetDate = new Date(currentYear, currentMonth + 1, 20);
+        }
+
+        const diffTime = targetDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (currentDay >= 20 && currentDay <= 25) {
+            return {
+                message: '¡ATENCIÓN! 📅 Días de toma de estados de agua (del 20 al 25 de cada mes).',
+                severity: 'warning'
+            };
+        } else if (diffDays > 0) {
+            return {
+                message: `📅 Quedan ${diffDays} días para la toma de estados de agua (día 20 de este mes).`,
+                severity: 'info'
+            };
+        } else {
+            return {
+                message: '📅 La toma de estados de agua de este mes ya pasó. Próxima toma el día 20 del siguiente mes.',
+                severity: 'info'
+            };
+        }
+    };
+
+    const readingWarning = getReadingDateWarning();
 
     useEffect(() => {
         const fetchUserDataAndStats = async () => {
             setLoadingStats(true);
             setErrorStats(null);
             try {
-                // Obtener datos del usuario logueado de la sesión actual
                 const { data: { user: loggedInUser } } = await supabase.auth.getUser();
                 if (loggedInUser) {
                     setUser(loggedInUser);
                 }
 
-                // --- Simulación de obtención de estadísticas ---
-                // En un caso real, harías consultas a tus tablas de Supabase para obtener estos números.
-                // Ejemplo:
-                // const { count: totalClientsCount, error: clientError } = await supabase.from('datos_medidor').select('*', { count: 'exact' });
-                // if (clientError) throw clientError;
-                // const { data: pendingPaymentsData, error: paymentsError } = await supabase.from('pagos').select('*').eq('estado', 'pendiente');
-                // if (paymentsError) throw paymentsError;
+                // --- Depuración: Obtención REAL de estadísticas de Supabase ---
+                console.log("Intentando obtener el conteo de clientes...");
+                const { count: totalClientsCount, error: clientCountError } = await supabase
+                    .from('datos medidor') // Asegúrate de que el nombre de la tabla sea EXACTO
+                    .select('*', { count: 'exact' });
 
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Simula tiempo de carga
+                if (clientCountError) {
+                    console.error("Error de Supabase al obtener conteo de clientes:", clientCountError);
+                    throw clientCountError;
+                }
 
-                setStats({
-                    totalClients: 1500, // Datos de ejemplo
+                console.log("Conteo de clientes obtenido:", totalClientsCount); // Muestra el conteo
+                console.log("Datos de error de conteo (debería ser null si es exitoso):", clientCountError); // Muestra el error (si lo hay)
+
+
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                setStats(prev => ({
+                    ...prev,
+                    totalClients: totalClientsCount || 0,
                     pendingPayments: 250,
                     recentLecturas: 500
-                });
+                }));
 
             } catch (error) {
-                console.error('Error fetching dashboard data:', error.message);
-                setErrorStats('Error al cargar los datos del panel.');
+                console.error('Error general en fetchUserDataAndStats:', error.message);
+                setErrorStats('Error al cargar los datos del panel: ' + error.message);
             } finally {
                 setLoadingStats(false);
             }
@@ -65,7 +107,7 @@ function AdminDashboard() {
         <Box
             sx={{
                 minHeight: '100vh',
-                backgroundImage: 'url("/images/image3.jpg")', // O la que prefieras para el admin
+                backgroundImage: 'url("/images/image3.jpg")',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundAttachment: 'fixed',
@@ -100,6 +142,10 @@ function AdminDashboard() {
                             Hola, {user.email}!
                         </Typography>
                     )}
+
+                    <Alert severity={readingWarning.severity} sx={{ width: '100%', mb: 3 }}>
+                        {readingWarning.message}
+                    </Alert>
 
                     {loadingStats ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
